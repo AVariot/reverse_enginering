@@ -1,0 +1,7 @@
+[package]
+name = "elfscope"
+version = "0.1.0"
+edition = "2021"
+description = "Analyseur de binaires ELF64 x86-64 écrit sans dépendance"
+
+[dependencies]
