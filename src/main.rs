@@ -26,13 +26,15 @@ fn main() {
     }
 
     let file_content: Vec<u8> = file_handler(&args[1]);
-    match elf_handler::elf_header_check(&file_content) {
-        Ok(_) => {},
+    let header = match elf_handler::parse_elf_header(&file_content) {
+        Ok(header) => header,
         Err(message) => {
             eprint!("{}", message.to_string());
             exit(84);
         }
-    }
+    };
+
+    println!("{:#?}", header);
 
     println!("Ok");
     exit(0);
