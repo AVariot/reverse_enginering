@@ -1,4 +1,15 @@
 
+#[derive(Debug)]
+pub struct ElfHeader {
+    pub e_type: u16,
+    pub e_machine: u16,
+    pub e_entry: u64,
+    pub e_phoff: u64,
+    pub e_shoff: u64,
+    pub e_phnum: u16,
+    pub e_shnum: u16,
+}
+
 pub fn elf_header_check(file_content: &[u8]) -> Result<(), &'static str> {
 
     if file_content.len() < 64 {
