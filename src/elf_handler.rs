@@ -9,6 +9,16 @@ pub struct ElfHeader {
     pub e_phentsize: u16,
     pub e_phnum: u16,
     pub e_shnum: u16,
+    pub e_version: u32,
+    pub e_flags: u32,
+    pub e_ehsize: u16,
+    pub e_shentsize: u16,
+    pub e_shstrndx: u16,
+    pub EI_CLASS: u8,
+    pub EI_DATA: u8,
+    pub EI_VERSION: u8,
+    pub EI_OSABI: u8,
+    pub EI_ABIVERSION: u8,
 }
 
 #[derive(Debug)]
@@ -19,6 +29,58 @@ pub struct ProgramHeader {
     pub p_vaddr: u64,
     pub p_filesz: u64,
     pub p_memsz: u64,
+}
+
+// Header
+
+pub fn type_name(p_type: u32) -> &'static str {
+    match p_type {
+        1 => "LOAD",
+        2 => "DYNAMIC",
+        3 => "INTERP",
+        4 => "NOTE",
+        6 => "PHDR",
+        0x6474e550 => "GNU_EH_FRAME",
+        0x6474e551 => "GNU_STACK",
+        0x6474e552 => "GNU_RELRO",
+        0x6474e553 => "GNU_PROPERTY",
+        0x6474e554 => "GNU_SFRAME",
+        _ => "UNKNOWN"
+    }
+}
+
+pub fn type_string(e_type: u16) -> &'static str {
+    match e_type {
+        0 => "NONE (None)",
+        1 => "REL (Relocatable file)",
+        2 => "EXEC (Executable file)",
+        3 => "DYN (Shared object file)",
+        4 => "CORE (Core file)",
+        _ => "UNKNOWN"
+    }
+}
+
+pub fn os_name(osabi: u8) -> &'static str {
+    match osabi {
+        0 => "UNIX - System V",
+        3 => "UNIX - GNU",
+        9 => "UNIX - FreeBSD",
+        _ => "NaN"
+    }
+}
+
+pub fn flags_string(p_flags: u32) -> &'static str {
+    match p_flags & 0b111 {
+        0 => "---",
+        1 => "--X",
+        2 => "-W-",
+        3 => "-WX",
+        4 => "R--",
+        5 => "R-X",
+        6 => "RW-",
+        7 => "RWX",
+        _ => "???",
+    }
 }
 
 pub fn parse_programe_headers(file_content: &[u8], header: &ElfHeader) -> Result<Vec<ProgramHeader>, &'static str> {
@@ -68,10 +130,21 @@ pub fn parse_elf_header(file_content: &[u8]) -> Result<ElfHeader, &'static str> 
         e_phentsize: read_u16(file_content, 54),
         e_phnum: read_u16(file_content, 56),
         e_shnum: read_u16(file_content, 60),
+        EI_CLASS: file_content[4],
+        EI_DATA: file_content[5],
+        EI_VERSION: file_content[6],
+        EI_OSABI: file_content[7],
+        EI_ABIVERSION: file_content[8],
+        e_version: read_u32(file_content, 20),
+        e_flags: read_u32(file_content, 48),
+        e_ehsize: read_u16(file_content, 52),
+        e_shentsize: read_u16(file_content, 58),
+        e_shstrndx: read_u16(file_content, 62)
     };
 
     Ok(header)
 }
+
 
 pub fn elf_header_check(file_content: &[u8]) -> Result<(), &'static str> {
 
@@ -108,6 +181,9 @@ pub fn elf_header_check(file_content: &[u8]) -> Result<(), &'static str> {
 
     Ok(())
 }
+
+
+// Tools bytes
 
 fn read_u16(octet_array: &[u8], offset: usize) -> u16 {
     u16::from_le_bytes([octet_array[offset], octet_array[offset + 1]])
